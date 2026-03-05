@@ -1,0 +1,6 @@
+{
+  "uuid": "appwatch@local",
+  "name": "AppWatch",
+  "description": "Send active app changes",
+  "shell-version": ["45", "46", "48"]
+}
