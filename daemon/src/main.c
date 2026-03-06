@@ -2,7 +2,7 @@
  * Author:
  *      Mate Bartfai
  * Purpose:
- *      
+ *
  ************************************************************************/
 
 #include <netinet/in.h>
@@ -35,11 +35,70 @@ typedef enum {
   NET_FAIL,
 } NetworkStates_t;
 
-const int portno = 7777;
-const uint16_t BUFSIZE = 256;
+typedef enum { LINUX, OSX, WINDOWS } OS_t;
 
+typedef enum {
+  APP_VS_CODE = 0,
+  APP_PYCHARM,
+  APP_CLION,
+  APP_QT_CREATOR,
+  /* VIDEO EDITING */
+  APP_KDENLIVE,
+  /* MUSIC PRODUCTION */
+  APP_AUDACITY,
+  APP_ABLETON,
+  /* BROWSERS */
+  APP_SAFARI,
+  APP_FIREFOX,
+  APP_CHROME,
+  APP_VIVALDI,
+  APP_EDGE,
+
+  /* UNDEFINED */
+  APP_UNDEFINED,
+
+} application_t;
+
+typedef struct {
+  const char *name;
+  application_t app;
+} app_map_t;
+
+static const app_map_t app_map[] = {
+  {"code", APP_VS_CODE},
+  {"vscode", APP_VS_CODE},
+  {"pycharm", APP_PYCHARM},
+  {"clion", APP_CLION},
+  {"qtcreator", APP_QT_CREATOR},
+
+  {"kdenlive", APP_KDENLIVE},
+
+  {"audacity", APP_AUDACITY},
+  {"ableton", APP_ABLETON},
+
+  {"safari", APP_SAFARI},
+  {"firefox", APP_FIREFOX},
+  {"chrome", APP_CHROME},
+  {"vivaldi", APP_VIVALDI},
+  {"edge", APP_EDGE},
+};
+
+/************************************************************************
+ *  Global variables
+ ************************************************************************/
+const int PORT = 7777;
+const uint16_t BUFSIZE = 256;
+static NetworkStates_t s_network_state = NET_IDLE;
+
+/************************************************************************
+ *  Function definitions
+ ************************************************************************/
 uint8_t init_server();
 int receive(int *client, char *buf, int buf_len);
+
+application_t parse_app_name(char *buf, int len);
+
+uint8_t send_usb(application_t app);
 
 int modify(int *pint) {
 
@@ -47,9 +106,6 @@ int modify(int *pint) {
 
   return 0;
 }
-
-static NetworkStates_t network_state = NET_IDLE;
-
 
 /**
  * Main program
@@ -67,11 +123,10 @@ int main() {
   modify(&test);
 
   if (12 != test) {
-
     return -1;
   }
 
-  network_state = NET_INITING;
+  s_network_state = NET_INITING;
 
   printf("[SRV] Initialising....\n");
   if (0 != init_server(&sockfd)) {
@@ -79,24 +134,44 @@ int main() {
     return 1;
   }
 
-  network_state = NET_CONNECTING;
+  s_network_state = NET_CONNECTING;
   if (listen(sockfd, 5) < 0) {
     perror("listen");
     return 1;
   }
 
-  clilen = sizeof(cli_addr);
-  client_sock_fd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-  if (client_sock_fd < 0) {
-    perror("ERROR on accept");
+client_init:
+  if (s_network_state == NET_DISCONNECTED ||
+      s_network_state == NET_CONNECTING) {
+
+    clilen = sizeof(cli_addr);
+    client_sock_fd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+    if (client_sock_fd < 0) {
+      perror("ERROR on accept");
+    }
   }
 
-  network_state = NET_READY;
+  s_network_state = NET_READY;
+  application_t cmd;
 
-  while (network_state == NET_READY || network_state == NET_CONNECTED) {
+  while (s_network_state == NET_READY || s_network_state == NET_CONNECTED) {
+
+    memset(buf, 0, BUFSIZE); /* clear buffer each time */
     len = receive(&client_sock_fd, buf, BUFSIZE);
     if (len < 0) {
       perror("[SRV][ERROR] Wrong data received");
+    }
+
+    if (len == 0) {
+      perror("[SRV][ERROR]Client disconnected");
+      s_network_state = NET_DISCONNECTED;
+      close(client_sock_fd);
+      goto client_init;
+    }
+
+    if (len > 0) {
+      cmd = parse_app_name(buf, len);
+      send_usb(cmd);
     }
   }
 
@@ -107,12 +182,13 @@ int main() {
   /* if usb connected send Operating System */
   /* send active app name */
   /* on change send active app name */
+  if (client_sock_fd > 0)
+    close(client_sock_fd);
 
   close(sockfd);
-  close(client_sock_fd);
 
   return 0;
-}
+} /* end main */
 
 /**
  * Init server and return error_code.
@@ -133,9 +209,9 @@ uint8_t init_server(int *sockfd) {
   memset(&serv_addr, 0, sizeof(serv_addr)); /* clearing  */
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
-  serv_addr.sin_port = htons(portno);
+  serv_addr.sin_port = htons(PORT);
 
-  printf("[SRV] Waiting for incomming connection on %d....\n", portno);
+  printf("[SRV] Waiting for incomming connection on %d....\n", PORT);
   int opt = 1;
   /* resue address. do not block port */
   setsockopt(*sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -160,5 +236,28 @@ int receive(int *client, char *buf, int buf_len) {
     printf("Received %d characters with : '%s' \n", len, buf);
   }
 
-  return 0;
+  return len;
+}
+
+/**
+ * Process incoming app name and get the related command
+ */
+application_t parse_app_name(char *buf, int len) {
+  size_t size = sizeof(app_map) / sizeof(app_map[0]); /* length of lookup table */
+
+    for (size_t i = 0; i < size; i++) {
+        if (strcmp(buf, app_map[i].name) == 0) {
+            return app_map[i].app;
+        }
+    }
+
+    return APP_UNDEFINED;
+}
+
+/**
+ * Send the APP command via USB to the keyboard
+ */
+uint8_t send_usb(application_t app) {
+
+  printf("[SRV] Sending via USB: 'APP' %d\n", app);
 }
