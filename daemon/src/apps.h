@@ -12,9 +12,13 @@ typedef enum {
   APP_QT_CREATOR,
   /* VIDEO EDITING */
   APP_KDENLIVE,
+  /* PhOTO */
+  APP_GIMP,
+  APP_DARKTABLE,
   /* MUSIC PRODUCTION */
   APP_AUDACITY,
   APP_ABLETON,
+  APP_GARAGEBAND,
   /* BROWSERS */
   APP_SAFARI,
   APP_FIREFOX,
@@ -39,10 +43,15 @@ static const app_map_t app_map[] = {
   {"clion", APP_CLION},
   {"qtcreator", APP_QT_CREATOR},
 
+  {"darktable", APP_DARKTABLE},
+  {"gimp", APP_GIMP},
+
   {"kdenlive", APP_KDENLIVE},
 
   {"audacity", APP_AUDACITY},
   {"ableton", APP_ABLETON},
+  {"garageband", APP_GARAGEBAND},
+
 
   {"safari", APP_SAFARI},
   {"firefox", APP_FIREFOX},
