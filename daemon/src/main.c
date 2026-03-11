@@ -12,8 +12,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <termios.h>
 #include <unistd.h>
+#include <termios.h>
 
 #include "network.h"
 #include "constants.h"
@@ -46,6 +46,7 @@ uint8_t send_usb(application_t app);
 int modify(int *pint) {
 
   *pint = 12;
+  printf("Value of pint: %d address 0x%x\n", *pint, pint);
 
   return 0;
 }
@@ -124,6 +125,7 @@ client_init:
   /* if usb connected send Operating System */
   /* send active app name */
   /* on change send active app name */
+  end:
   if (client_sock_fd > 0)
     close(client_sock_fd);
 
