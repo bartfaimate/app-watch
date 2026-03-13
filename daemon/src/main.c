@@ -43,14 +43,6 @@ static NetworkStates_t s_network_state = NET_IDLE;
 
 uint8_t send_usb(application_t app);
 
-int modify(int *pint) {
-
-  *pint = 12;
-  printf("Value of pint: %d address 0x%x\n", *pint, pint);
-
-  return 0;
-}
-
 void parse_app_name(char* input, int len, char* output); 
 
 /**
@@ -150,5 +142,5 @@ uint8_t send_usb(application_t app) {
 
 void parse_app_name(char* input, int len, char* output) {
 
-  
+
 }
