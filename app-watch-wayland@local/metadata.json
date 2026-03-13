@@ -1,5 +1,5 @@
 {
-  "uuid": "appwatch@local",
+  "uuid": "app-watch-wayland@local",
   "name": "AppWatch",
   "description": "Send active app changes",
   "shell-version": ["45", "46", "48"]

@@ -51,6 +51,8 @@ int modify(int *pint) {
   return 0;
 }
 
+void parse_app_name(char* input, int len, char* output); 
+
 /**
  * Main program
  */
@@ -143,4 +145,10 @@ client_init:
 uint8_t send_usb(application_t app) {
 
   printf("[SRV] Sending via USB: 'APP' %d\n", app);
+}
+
+
+void parse_app_name(char* input, int len, char* output) {
+
+  
 }
