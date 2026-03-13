@@ -43,7 +43,6 @@ static NetworkStates_t s_network_state = NET_IDLE;
 
 uint8_t send_usb(application_t app);
 
-void parse_app_name(char* input, int len, char* output); 
 
 /**
  * Main program
@@ -56,12 +55,6 @@ int main() {
   int len;           /* length of received data */
   char buf[BUFSIZE]; // waht we receive from socket
 
-  int test = 0;
-
-  modify(&test);
-  if (12 != test) {
-    return -1;
-  }
 
   s_network_state = NET_INITING;
 
@@ -137,10 +130,4 @@ client_init:
 uint8_t send_usb(application_t app) {
 
   printf("[SRV] Sending via USB: 'APP' %d\n", app);
-}
-
-
-void parse_app_name(char* input, int len, char* output) {
-
-
 }
