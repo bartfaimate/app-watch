@@ -101,6 +101,7 @@ client_init:
 
     if (len > 0) {
       cmd = parse_app_name(buf, len);
+      
       send_usb(cmd);
     }
   }

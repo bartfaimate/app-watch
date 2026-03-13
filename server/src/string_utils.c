@@ -41,7 +41,7 @@ char *lower(char* input ) {
   int i = 0;
   while (*input )
   {
-    result[i] = tolower((unsigned char) input);
+    result[i] = tolower((unsigned char) *input);
     i++;
     input++;
   }
